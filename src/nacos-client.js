@@ -4,53 +4,84 @@ import { resolve } from 'path';
 import { existsSync } from 'fs';
 
 export async function fetchNacosAndWrite(config) {
+  // 校验必填参数
+  if (!config.dataId || !config.group || !config.serverAddr) {
+    console.error('❌ [next-nacos] 缺少 Nacos 配置参数：dataId/group/serverAddr 必须填写');
+    process.exit(1);
+  }
+
   const configClient = new NacosConfigClient({
     ...config,
-    requestTimeout: 6000,
+    requestTimeout: 10000, // 适当延长超时，网络抖动更稳定
   });
 
   try {
+    console.log('🔄 [next-nacos] 正在从 Nacos 拉取配置...');
     const data = await configClient.getConfig(config.dataId, config.group);
+    
+    if (!data) {
+      console.warn('⚠️ [next-nacos] Nacos 配置内容为空，跳过写入');
+      process.exit(0);
+    }
+
     const envPath = resolve(process.cwd(), '.env');
-    
-    // 增量更新模式：读取现有内容，移除旧的 NEXT_PUBLIC_NACOS 行，追加新值
     let existingContent = '';
-    
-    // 如果 .env 文件存在，读取现有内容
+
+    // 读取现有 .env
     if (existsSync(envPath)) {
       existingContent = await readFile(envPath, 'utf-8');
     }
-    
-    // 将内容按行分割，过滤掉旧的 NEXT_PUBLIC_NACOS 行
-    const lines = existingContent.split('\n');
-    const filteredLines = lines.filter(line => {
-      // 移除以 NEXT_PUBLIC_NACOS= 开头的行（包括带引号和不带引号的情况）
+
+    // 按行拆分，清理旧的 NEXT_PUBLIC_NACOS 配置
+    const lines = existingContent.split(/\r?\n/); // 兼容 Windows \r\n 换行
+    const filteredLines = [];
+    let inNacosBlock = false;
+
+    for (const line of lines) {
       const trimmedLine = line.trim();
-      return !trimmedLine.startsWith('NEXT_PUBLIC_NACOS=');
-    });
-    
-    // 移除末尾的空行，然后添加新的 NEXT_PUBLIC_NACOS 值
-    while (filteredLines.length > 0 && filteredLines[filteredLines.length - 1].trim() === '') {
+
+      // 匹配旧配置开头
+      if (trimmedLine.startsWith('NEXT_PUBLIC_NACOS=')) {
+        inNacosBlock = true;
+        continue;
+      }
+
+      // 匹配多行结束符 '
+      if (inNacosBlock && trimmedLine === `'`) {
+        inNacosBlock = false;
+        continue;
+      }
+
+      // 非 Nacos 配置行保留
+      if (!inNacosBlock) {
+        filteredLines.push(line);
+      }
+    }
+
+    // 清理末尾空行，避免文件越来越大
+    while (filteredLines.length > 0 && filteredLines.at(-1).trim() === '') {
       filteredLines.pop();
     }
-    
-    // 如果文件不为空，添加换行符
+
+    // 追加新配置
     if (filteredLines.length > 0) {
-      filteredLines.push('');
+      filteredLines.push(''); // 空行分隔
     }
-    
-    // 添加新的 NEXT_PUBLIC_NACOS 行
-    filteredLines.push(`NEXT_PUBLIC_NACOS='${data}'`);
-    
-    // 写入更新后的内容
+    // 转义单引号，防止配置内容包含 ' 导致语法断裂
+    const escapedData = data.replace(/'/g, "\\'");
+    filteredLines.push(`NEXT_PUBLIC_NACOS='${escapedData}'`);
+
+    // 写入文件（统一 \n 换行，兼容跨平台）
     const newContent = filteredLines.join('\n') + '\n';
     await writeFile(envPath, newContent, 'utf-8');
-    
-    console.log('✅ [next-nacos] .env file has been written');
-    process.exit(0);
-  } catch (err) {
-    console.error('❌ [next-nacos] Failed to get config from Nacos:', err.message);
 
+    console.log('✅ [next-nacos] .env 配置更新成功');
+    process.exit(0);
+
+  } catch (err) {
+    console.error('❌ [next-nacos] 拉取 Nacos 配置失败：', err.message);
+    // 开发/生产可选择：失败不退出，使用旧配置
+    // process.exit(1);
     process.exit(1);
   }
 }
