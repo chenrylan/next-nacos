@@ -29,9 +29,9 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/zhangchen21/next-nacos.git"
+    "url": "git+ssh://git@github.com/chenrylan/next-nacos.git"
   },
   "bugs": {
-    "url": "https://github.com/zhangchen21/next-nacos/issues"
+    "url": "https://github.com/chenrylan/next-nacos/issues"
   }
 }
