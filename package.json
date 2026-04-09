@@ -1,6 +1,6 @@
 {
   "name": "next-nacos",
-  "version": "2.0.1",
+  "version": "1.0.0",
   "type": "module",
   "description": "A command-line tool to sync configurations from Nacos configuration center to Next.js projects.",
   "main": "src/cli.js",
@@ -29,9 +29,9 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/zhangchen21/next-nacos.git"
+    "url": "git+ssh://git@github.com/chenrylan/next-nacos.git"
   },
   "bugs": {
-    "url": "https://github.com/zhangchen21/next-nacos/issues"
+    "url": "https://github.com/chenrylan/next-nacos/issues"
   }
 }
