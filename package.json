@@ -1,6 +1,6 @@
 {
   "name": "next-nacos",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "description": "A command-line tool to sync configurations from Nacos configuration center to Next.js projects.",
   "main": "src/cli.js",
