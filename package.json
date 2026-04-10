@@ -2,7 +2,7 @@
   "name": "next-nacos",
   "version": "1.0.2",
   "type": "module",
-  "description": "A command-line tool to sync configurations from Nacos configuration center to Next.js projects.",
+  "description": "A tool to sync configurations from Nacos configuration center to Next.js projects.",
   "main": "src/cli.js",
   "bin": {
     "next-nacos": "src/cli.js"
@@ -13,9 +13,9 @@
   "keywords": [
     "nextjs",
     "nacos",
-    "config"
+    "next"
   ],
-  "author": "Chen Zhang<rylanzhang@163.com>",
+  "author": "chenrylan<rylanzhang@163.com>",
   "license": "MIT",
   "dependencies": {
     "nacos": "^2.0.0"
