@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { loadUserConfig } from './config-loader.js';
 import { fetchNacosAndWrite } from './nacos-client.js';
 
